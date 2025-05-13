@@ -128,73 +128,102 @@ class Recon:
 
         return complete
 
+    # TODO: remove dependenci from hcidump
+    def start_hcidump(self):
+        logging.info("Starting hcidump -X...")
+        process = subprocess.Popen(
+            ["hcidump", "-X"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        return process
 
-def load_recon_data(target: str):
+    def stop_hcidump(self, process):
+        logging.info("Stopping hcidump -X...")
+        process.send_signal(subprocess.signal.SIGINT)
+        output, _ = process.communicate()
+        logging.info("hcidump -> " + str(output.decode()))
+        logging.info("hcidump -X stopped.")
+        return output
+
+    def get_hcidump(self, target):
+        hcidump_process = self.start_hcidump()
+        try:
+            time.sleep(1)
+            check_device_status(target=target)
+        finally:
+            return self.stop_hcidump(hcidump_process).decode().split("\n")
+
+    def get_capabilities(self, target):
+        data = _load_recon_data(target)
+        if data is None:
+            self.run_recon(target=target)
+            data = _load_recon_data(target)
+            if data is None:
+                logging.error("Device data not available")
+                return None
+
+        return data["io_capabilities"]
+
+    def get_remote_features(self, target):
+        data = _load_recon_data(target)
+        if data is None:
+            self.run_recon(target=target)
+            data = _load_recon_data(target)
+            if data is None:
+                logging.error("Device data not available")
+                return None
+
+        return data["lmp_features"] if self.mode == "classic" else data["ll_features"]
+
+
+def _load_recon_data(target: str):
     file_path = OUTPUT_DIRECTORY.format(target=target, exploit="recon") + "recon.json"
     if not Path(file_path).exists():
         logging.error(f"Recon data file {file_path} does not exist.")
-        return None, None, None
+        return None
     with open(file_path, "r") as f:
-        data = json.load(f)
-        return data["vendor"], data["version"], data["type"]
+        return json.load(f)
 
-    # def start_hcidump(self):
-    #     logging.info("Starting hcidump -X...")
-    #     process = subprocess.Popen(
-    #         ["hcidump", "-X"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    #     )
-    #     return process
 
-    # def stop_hcidump(self, process):
-    #     logging.info("Stopping hcidump -X...")
-    #     process.send_signal(subprocess.signal.SIGINT)
-    #     output, _ = process.communicate()
-    #     logging.info("hcidump -> " + str(output.decode()))
-    #     logging.info("hcidump -X stopped.")
-    #     return output
+def load_recon_data(target: str):
+    data = _load_recon_data(target)
+    if data is None:
+        return None, None, None
+    return data["vendor"], data["version"], data["type"]
 
-    # def get_hcidump(self, target):
-    #     hcidump_process = self.start_hcidump()
-    #     try:
-    #         time.sleep(2)
 
-    #         check_connectivity(target=target)
-    #     finally:
-    #         return self.stop_hcidump(hcidump_process).decode().split("\n")
+# def get_capabilities(self, target):
+#     output = self.get_hcidump(target)
+#     # Our capability is set as NoInputNoOutput so the other one should be a target device capability
+#     capabilities = set()
+#     numb_of_capabilities = 0
+#     for line in output:
+#         if line.strip().startswith("Capability:"):
+#             capabilities.add(line.strip().split(" ")[1])
+#             numb_of_capabilities += 1
+#     logging.info(
+#         "recon.py -> found the following capabilities " + str(capabilities)
+#     )
+#     if len(capabilities) == 0:
+#         logging.info("recon.py -> most likely legacy pairing")
+#         return None
+#     elif numb_of_capabilities == 1:
+#         logging.info("recon.py -> got only 1 capability " + str(capabilities))
+#         return capabilities.pop()
+#     capabilities.remove("NoInputNoOutput")
+#     capability = None
+#     if len(capabilities) == 0:
+#         return "NoInputNoOutput"
+#     else:
+#         return capabilities.pop()
 
-    # def get_capabilities(self, target):
-    #     output = self.get_hcidump(target)
-    #     # Our capability is set as NoInputNoOutput so the other one should be a target device capability
-    #     capabilities = set()
-    #     numb_of_capabilities = 0
-    #     for line in output:
-    #         if line.strip().startswith("Capability:"):
-    #             capabilities.add(line.strip().split(" ")[1])
-    #             numb_of_capabilities += 1
-    #     logging.info(
-    #         "recon.py -> found the following capabilities " + str(capabilities)
-    #     )
-    #     if len(capabilities) == 0:
-    #         logging.info("recon.py -> most likely legacy pairing")
-    #         return None
-    #     elif numb_of_capabilities == 1:
-    #         logging.info("recon.py -> got only 1 capability " + str(capabilities))
-    #         return capabilities.pop()
-    #     capabilities.remove("NoInputNoOutput")
-    #     capability = None
-    #     if len(capabilities) == 0:
-    #         return "NoInputNoOutput"
-    #     else:
-    #         return capabilities.pop()
+# def scan_additional_recon_data(self, target):
+#     # collect additional data - for now it's only capability
 
-    # def scan_additional_recon_data(self, target):
-    #     # collect additional data - for now it's only capability
+#     capability = self.get_capabilities(target=target)
 
-    #     capability = self.get_capabilities(target=target)
-
-    #     log_dir = OUTPUT_DIRECTORY.format(target=target, exploit="recon")
-    #     Path(log_dir).mkdir(exist_ok=True, parents=True)
-    #     filename = log_dir + ADDITIONAL_RECON_DATA_FILE
-    #     f = open(filename, "w")
-    #     f.write(capability)
-    #     f.close()
+#     log_dir = OUTPUT_DIRECTORY.format(target=target, exploit="recon")
+#     Path(log_dir).mkdir(exist_ok=True, parents=True)
+#     filename = log_dir + ADDITIONAL_RECON_DATA_FILE
+#     f = open(filename, "w")
+#     f.write(capability)
+#     f.close()
