@@ -19,7 +19,7 @@ from bluekit.constants import (
     RETURN_CODE_VULNERABLE,
 )
 from bluekit.constants import OUTPUT_DIRECTORY
-from pybtool.classic.bc import BcDevice
+from pybtool.device import Device
 
 RETVAL_TARGET_NOT_AVAILABLE = 0
 RETVAL_TARGET_CONN_ONLY = 1
