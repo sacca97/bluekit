@@ -6,7 +6,6 @@ import logging
 import time
 import signal
 from pybtool.device import Device
-from pybtool.classic.bc import BcDevice
 
 from pathlib import Path
 from bluekit.verifyconn import check_device_status
@@ -74,12 +73,14 @@ class Recon:
         - Pairing features (i.e., I/O capabilities)
         """
         if device is None and self.mode == "classic":
-            device = BcDevice()
+            device = Device()
         elif device is None and self.mode == "le":
             # device = BcDevice()
             logging.error("LE recon not implemented yet")
             return False
-        #     device.destroy()
+
+        device.power_on()
+        #     device.power_off()
         # # Initialize the device, default dev ID is 0
         # device = BcDevice()
         res = {"type": self.mode}
@@ -91,9 +92,11 @@ class Recon:
 
             # Check if dev is connectable, default expect random address
             if device.connect(target):
+                logging.info("Recon.py -> device connected")
                 res[f"{self.mode}_connectable"] = True
                 # Tries to get the version and vendor
                 res["version"], res["vendor"] = device.get_remote_version()
+                logging.info("Recon.py -> got version and vendor")
 
                 # Tries to get the ll/lmp remote features
                 features = device.get_remote_features()
@@ -103,9 +106,7 @@ class Recon:
                     res["ll_features"] = features
 
                 # Tries to get the pairing features (TODO: decode the value)
-                res[f"{self.mode}_pairable"], res[f"{self.mode}_pairing_features"] = (
-                    device.pair()
-                )
+                res[f"pairable"], res[f"pairing_features"] = device.pair()
 
                 device.disconnect()
                 if not any(value is None for value in res.values()):  # Success
@@ -124,7 +125,7 @@ class Recon:
             except Exception as e:
                 logging.error(f"Error writing to {f'{log_dir}recon.json'}: {e}")
 
-        device.destroy()
+        device.power_off()
 
         return complete
 
@@ -153,21 +154,21 @@ class Recon:
             return self.stop_hcidump(hcidump_process).decode().split("\n")
 
     def get_capabilities(self, target):
-        data = _load_recon_data(target)
+        data = load_recon_data_full(target)
         if data is None:
             self.run_recon(target=target)
-            data = _load_recon_data(target)
+            data = load_recon_data_full(target)
             if data is None:
                 logging.error("Device data not available")
                 return None
 
-        return data["io_capabilities"]
+        return data["pairing_features"]["io_capabilities"]
 
     def get_remote_features(self, target):
-        data = _load_recon_data(target)
+        data = load_recon_data_full(target)
         if data is None:
             self.run_recon(target=target)
-            data = _load_recon_data(target)
+            data = load_recon_data_full(target)
             if data is None:
                 logging.error("Device data not available")
                 return None
@@ -175,7 +176,7 @@ class Recon:
         return data["lmp_features"] if self.mode == "classic" else data["ll_features"]
 
 
-def _load_recon_data(target: str):
+def load_recon_data_full(target: str):
     file_path = OUTPUT_DIRECTORY.format(target=target, exploit="recon") + "recon.json"
     if not Path(file_path).exists():
         logging.error(f"Recon data file {file_path} does not exist.")
@@ -185,7 +186,7 @@ def _load_recon_data(target: str):
 
 
 def load_recon_data(target: str):
-    data = _load_recon_data(target)
+    data = load_recon_data_full(target)
     if data is None:
         return None, None, None
     return data["vendor"], data["version"], data["type"]

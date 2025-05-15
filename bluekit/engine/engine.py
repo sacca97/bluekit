@@ -308,8 +308,7 @@ class Engine:
     def process_raw_data(self, data, if_failed):
         # INEFFICIENTLY processes data line by line (there is room for improvement)
         try:
-            # TODO: check what data contains because the search function can return None
-            # test with blueborne_CVE_2017_0785
+            # TODO: if data is empty, return error directly
             mm = re.compile(REGEX_EXPLOIT_OUTPUT_DATA)
             output = mm.search(data).group()
             print(output)

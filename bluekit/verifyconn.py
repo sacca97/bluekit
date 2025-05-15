@@ -42,7 +42,8 @@ def check_device_status(target: str) -> int:
             5: Found, connectable, pairable
     """
     # Initialize the device, default dev ID is 0
-    device = BcDevice()
+    device = Device()
+    device.power_on()
 
     scan_success = device.scan(target=target)
     connect_success = device.connect(target)
@@ -56,7 +57,7 @@ def check_device_status(target: str) -> int:
         return 1 if not scan_success else 4
 
     device.disconnect()
-    device.destroy()
+    device.power_off()
 
     return 2 if not scan_success else 5
 
