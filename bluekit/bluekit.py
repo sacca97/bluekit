@@ -82,11 +82,7 @@ class BlueKit:
         )
         print("Hardware availability:")
         for hardware in available_hardware:
-            print(
-                "{hardware} - status - {availability}".format(
-                    hardware=hardware.name, availability=hardware_verfied[hardware.name]
-                )
-            )
+            print(f"{hardware.name} - status - {hardware_verfied[hardware.name]}")
 
     def get_exploits_with_setup(self):
         available_exploits = self.get_available_exploits()
@@ -230,21 +226,17 @@ class BlueKit:
 
     # Start testing from a normal call (testing all exploits)
     def start_from_cli_all(self, target, parameters) -> None:
-        logging.info("start_from_cli_all -> Target: {}".format(target))
+        logging.info(f"start_from_cli_all -> Target: {target}")
         available_exploits = self.get_available_exploits()
         exploits_with_setup = self.exploit_filter(
             target=target, exploits=self.get_exploits_with_setup()
         )
 
         print(
-            "There are {} out of {} exploits available.\n".format(
-                len(exploits_with_setup), len(available_exploits)
-            )
+            f"There are {len(exploits_with_setup)} out of {len(available_exploits)} exploits available.\n"
         )
         print(
-            "Running the following exploits: {}".format(
-                [exploit.name for exploit in exploits_with_setup]
-            )
+            f"Running the following exploits: {[exploit.name for exploit in exploits_with_setup]}"
         )
 
         exploit_pool = exploits_with_setup
@@ -276,12 +268,10 @@ class BlueKit:
             print(f"Recon data found - {recon_file}")
 
         logging.info(
-            "start_from_cli_all -> available exploit amount - {}".format(len(exploits))
+            f"start_from_cli_all -> available exploit amount - {len(exploits)}"
         )
         logging.info(
-            "start_from_cli_all -> exploits to scan amount - {}".format(
-                len(self.exploits_to_scan)
-            )
+            f"start_from_cli_all -> exploits to scan amount - {len(self.exploits_to_scan)}"
         )
 
         if len(self.exploits_to_scan) > 0:
@@ -295,20 +285,13 @@ class BlueKit:
                 if exploit.name not in self.exclude_exploits
             ]  # suboptimal implementation, but should be fine
         logging.info(
-            "start_from_cli_all -> available exploit again amount - {}".format(
-                len(exploits)
-            )
+            f"start_from_cli_all -> available exploit again amount - {len(exploits)}"
         )
 
         exploits = [exploit for exploit in exploits if exploit.mass_testing]
 
         if version is not None:
-            # print("Target Bluetooth version: {}".format(version))
-            # print("Skipping all exploits and hardware that do not support this version")
-            logging.info("Target Bluetooth version: {}".format(version))
-            logging.info(
-                "Skipping all exploits and hardware that do not support this version"
-            )
+            logging.info(f"Target Bluetooth version: {version}")
             exploits = [
                 exploit
                 for exploit in exploits
@@ -316,7 +299,7 @@ class BlueKit:
                 <= float(version)
                 <= float(exploit.bt_version_max)
             ]
-            logging.info("there are {} exploits to work on".format(len(exploits)))
+            logging.info(f"Only {len(exploits)} exploits can be used")
 
         return exploits
 
@@ -352,16 +335,10 @@ class BlueKit:
         available_exploits = self.get_available_exploits()
 
         print(
-            "There are {} out of {} exploits available. {} exploits have already been tested.\n".format(
-                len(exploit_pool) + len(self.done_exploits),
-                len(available_exploits),
-                len(self.done_exploits),
-            )
+            f"There are {len(exploit_pool) + len(self.done_exploits)} / {len(available_exploits)} exploits left. {len(self.done_exploits)} have already been tested.\n"
         )
         print(
-            "Running the following exploits: {}".format(
-                [exploit.name for exploit in exploit_pool]
-            )
+            f"Running the following exploits: {[exploit.name for exploit in exploit_pool]}"
         )
 
         return exploit_pool
@@ -488,6 +465,7 @@ def main():
     elif args.checksetup:
         blueExp.check_setup()
     elif args.target:
+        target = args.target.lower()
         if len(args.hardware) > 0:
             blueExp.set_exploits_hardware(args.hardware)
             logging.info("Provided --hardware parameter -> " + str(args.hardware))
@@ -499,18 +477,18 @@ def main():
             logging.info("Provided --exclude parameter -> " + str(args.excludeexploits))
 
         if args.checktarget:
-            blueExp.check_target(args.target)
+            blueExp.check_target(target)
         else:
             if args.recon:
-                blueExp.run_recon(args.target)
+                blueExp.run_recon(target)
             elif args.report:
-                blueExp.generate_report(args.target)
+                blueExp.generate_report(target)
             elif args.reportjson:
-                blueExp.generate_machine_readable_report(args.target)
+                blueExp.generate_machine_readable_report(target)
             elif args.checkpoint:
-                blueExp.start_from_a_checkpoint(args.target)
+                blueExp.start_from_a_checkpoint(target)
             else:
-                blueExp.start_from_cli_all(args.target, addition_parameters)
+                blueExp.start_from_cli_all(target, addition_parameters)
     else:
         parser.print_help()
 

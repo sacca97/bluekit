@@ -26,7 +26,6 @@ logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
 
 class Recon:
     def __init__(self, mode: str = "classic"):
-        # device: Device = None
         self.mode = mode
 
     def check_target(self, target: str):
@@ -45,7 +44,7 @@ class Recon:
             print("Device advertising, connectable and pairable")
 
     def run_command(self, target, command, filename):
-        print("Running command -> {}".format(command))
+        print(f"Running command -> {command}")
         try:
             output = subprocess.check_output(
                 command.format(target=target), shell=True
@@ -59,7 +58,7 @@ class Recon:
             return False
 
     def run_recon(
-        self, target: str, device: Device = None, save: bool = True, timeout: int = 20
+        self, target: str, dev: Device = None, save: bool = True, timeout: int = 20
     ) -> bool:
         """
         Run the recon process on the target device.
@@ -72,43 +71,45 @@ class Recon:
         - LMP features
         - Pairing features (i.e., I/O capabilities)
         """
-        if device is None and self.mode == "classic":
-            device = Device()
-        elif device is None and self.mode == "le":
+        if dev is None and self.mode == "classic":
+            dev = Device()
+        elif dev is None and self.mode == "le":
             # device = BcDevice()
             logging.error("LE recon not implemented yet")
             return False
 
-        device.power_on()
+        dev.power_on()
         #     device.power_off()
         # # Initialize the device, default dev ID is 0
         # device = BcDevice()
-        res = {"type": self.mode}
+        res = {}
         complete = False
         start_time = time.time()
         while not complete:
             # Check if dev is advertising
-            res[f"{self.mode}_advertising"] = device.scan(timeout=5, target=target)
-
+            res[f"type"] = dev.scan(timeout=5, target=target)
+            if res[f"type"] is not None:
+                res[f"advertising"] = True
             # Check if dev is connectable, default expect random address
-            if device.connect(target):
-                logging.info("Recon.py -> device connected")
-                res[f"{self.mode}_connectable"] = True
+            if dev.connect(target):
+                res[f"connectable"] = True
                 # Tries to get the version and vendor
-                res["version"], res["vendor"] = device.get_remote_version()
+                res["version"], res["vendor"] = dev.get_remote_version()
                 logging.info("Recon.py -> got version and vendor")
 
                 # Tries to get the ll/lmp remote features
-                features = device.get_remote_features()
+                features = dev.get_remote_features()
+                print("Recon.py -> got remote features")
                 if self.mode == "classic":
                     res["lmp_features"] = features
                 else:
                     res["ll_features"] = features
 
                 # Tries to get the pairing features (TODO: decode the value)
-                res[f"pairable"], res[f"pairing_features"] = device.pair()
+                res[f"pairable"], res[f"pairing_features"] = dev.pair()
+                logging.info("Recon.py -> got pairing features")
 
-                device.disconnect()
+                dev.disconnect()
                 if not any(value is None for value in res.values()):  # Success
                     logging.info("Recon.py -> run_recon terminated successfully")
                     complete = True
@@ -122,10 +123,12 @@ class Recon:
             try:
                 with open(f"{log_dir}recon.json", "w") as f:
                     json.dump(res, f, indent=4)  # indent for pretty formatting
+                print(f"Recon.py -> recon data saved to {log_dir}")
+
             except Exception as e:
                 logging.error(f"Error writing to {f'{log_dir}recon.json'}: {e}")
 
-        device.power_off()
+        dev.power_off()
 
         return complete
 

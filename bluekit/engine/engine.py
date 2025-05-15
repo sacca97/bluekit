@@ -58,9 +58,7 @@ class Engine:
         for param in current_exploit.parameters:
             if param["name"] in parameters_list:
                 logging.info(
-                    "Engine.construct_exploit_command -> parameter_name in parameter_List {}".format(
-                        param
-                    )
+                    f"Engine.construct_exploit_command -> parameter_name in parameter_List {param}"
                 )
 
                 """

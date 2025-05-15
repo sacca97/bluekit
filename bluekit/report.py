@@ -30,10 +30,8 @@ from bluekit.factories.exploitfactory import ExploitFactory
 
 
 def report_data(code, data):
-    logging.info(
-        "BLUEEXPLOITER DATA: code={code}, data={data}".format(code=code, data=data)
-    )
-    print("BLUEEXPLOITER DATA: code={code}, data={data}".format(code=code, data=data))
+    logging.info(f"BLUEEXPLOITER DATA: code={code}, data={data}")
+    print(f"BLUEEXPLOITER DATA: code={code}, data={data}")
 
 
 def report_not_vulnerable(data):
