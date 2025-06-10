@@ -56,9 +56,7 @@ def report_undefined(data):
 
 class Report:
     def __init__(self, bluekit):
-        self.exploitFactory = ExploitFactory(
-            TOOLKIT_BLUEEXPLOITER_INSTALLATION_DIRECTORY
-        )
+        self.exploitFactory = ExploitFactory()
         self.bluekit = bluekit
 
     def save_data(self, exploit_name, target, data, code):

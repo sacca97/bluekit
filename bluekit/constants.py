@@ -45,9 +45,13 @@ OUTPUT_DIRECTORY = TOOLKIT_INSTALLATION_DIRECTORY + "/data/tests/{target}/{explo
 TARGET_DIRECTORY = TOOLKIT_INSTALLATION_DIRECTORY + "/data/tests/{target}/"
 REPORT_OUTPUT_FILE = OUTPUT_DIRECTORY + "output_report.json"
 MACHINE_READABLE_REPORT_OUTPUT_FILE = TARGET_DIRECTORY + "whole-output.json"
-LOG_FILE = TOOLKIT_BLUEEXPLOITER_INSTALLATION_DIRECTORY + "/.logs/application.log"
-EXPLOIT_DIRECTORY = "/exploits"
-HARDWARE_DIRECTORY = "/hardware"
+LOG_FILE = TOOLKIT_INSTALLATION_DIRECTORY + "/.logs/application.log"
+
+# Exploits and hardware directories
+EXPLOIT_DIRECTORY = TOOLKIT_INSTALLATION_DIRECTORY + "/exploits"
+HARDWARE_DIRECTORY = TOOLKIT_INSTALLATION_DIRECTORY + "/hardware"
+
+
 CURRENT_DIRECTORY = os.getcwd()
 ADDITIONAL_RECON_DATA_FILE = "additional_data.log"
 SKIP_DIRECTORIES = ["recon"]  # skip these directories when getting exploit names

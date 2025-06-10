@@ -152,6 +152,8 @@ class Engine:
             target, current_exploit, parameters, pull_in_command=pull_in_command
         )
 
+        print(f"Running exploit {current_exploit.name}")
+
         if current_exploit.directory["change"]:
             new_directory = TOOLKIT_INSTALLATION_DIRECTORY
             if not current_exploit.directory["directory"].startswith("/"):

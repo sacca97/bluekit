@@ -34,12 +34,8 @@ class BlueKit:
         self.exploits_to_scan = []
         self.target = None
         self.parameters = None
-        self.exploitFactory = ExploitFactory(
-            TOOLKIT_BLUEEXPLOITER_INSTALLATION_DIRECTORY
-        )
-        self.hardwareFactory = HardwareFactory(
-            TOOLKIT_BLUEEXPLOITER_INSTALLATION_DIRECTORY
-        )
+        self.exploitFactory = ExploitFactory()
+        self.hardwareFactory = HardwareFactory()
         self.engine = Engine()
         self.checkpoint = Checkpoint()
         self.setupverifier = SetupVerifier()
